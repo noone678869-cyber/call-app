@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Video Call</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; }
+        #video-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 10px; justify-content: center; padding: 20px; }
+        video { width: 100%; border-radius: 15px; background: #222; transform: scaleX(-1); border: 2px solid #444; }
+        .controls { margin-top: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; margin: 5px; }
+        #mute-btn { background: #ff4757; color: white; }
+        #vid-btn { background: #2f3542; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Lobby (Auto-Connect)</h1>
+    <p>Anyone who opens this link joins the call!</p>
+
+    <div id="video-grid"></div>
+
+    <div class="controls">
+        <button id="mute-btn" onclick="toggleAudio()">Mute Mic</button>
+        <button id="vid-btn" onclick="toggleVideo()">Stop Video</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const videoGrid = document.getElementById('video-grid');
+        let myStream;
+
+        // 1. Get Camera and Mic
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            myStream = stream;
+            addVideoStream(stream);
+        })
+        .catch(err => {
+            console.error("Access denied!", err);
+            alert("Please allow camera access to join the call.");
+        });
+
+        function addVideoStream(stream) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => video.play());
+            videoGrid.append(video);
+        }
+
+        // Mute/Unmute Buttons
+        function toggleAudio() {
+            const enabled = myStream.getAudioTracks()[0].enabled;
+            myStream.getAudioTracks()[0].enabled = !enabled;
+            document.getElementById('mute-btn').innerText = enabled ? "Unmute Mic" : "Mute Mic";
+        }
+
+        function toggleVideo() {
+            const enabled = myStream.getVideoTracks()[0].enabled;
+            myStream.getVideoTracks()[0].enabled = !enabled;
+            document.getElementById('vid-btn').innerText = enabled ? "Start Video" : "Stop Video";
+        }
+    </script>
+</body>
+</html>
